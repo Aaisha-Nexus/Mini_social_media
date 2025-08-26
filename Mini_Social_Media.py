@@ -118,68 +118,75 @@ while True:
             print(f"'{searchkey}' doesn't exist")
     
     
- #============== SET OPTION================
+# ============== SET OPTION================
     elif choice == '8':  # Extract hashtags & mentions
-        tagpattern = r"#[a-zA-Z0-9_]+" #re for hashtag starts with '#'
-        mentionpattern = r"@[a-zA-Z0-9_]+" # starts with '@'
+        tagpattern = r"#[a-zA-Z0-9_]+"
+        mentionpattern = r"@[a-zA-Z0-9_]+"
+
+        hashtags_set.clear()
+        mentions_set.clear()
 
         # Collect from list posts
         for post in posts:
             hashtags_set.update(re.findall(tagpattern, post))
             mentions_set.update(re.findall(mentionpattern, post))
 
-        # Collect from tuple posts but only message part
+        # Collect from tuple posts
         for username, message in postswithUsername:
             hashtags_set.update(re.findall(tagpattern, message))
             mentions_set.update(re.findall(mentionpattern, message))
 
-        if hashtags_set: #here hashtag and mention are set so no duplicates
-            print("Hashtags found:", hashtags_set)
-        else:
-            print("Hashtags found: None")
+        # Collect from dict user posts
+        for user, details in users.items():
+            for post in details.get("posts", []):
+                hashtags_set.update(re.findall(tagpattern, post))
+                mentions_set.update(re.findall(mentionpattern, post))
 
-        if mentions_set:
-            print("Mentions found:", mentions_set)
-        else:
-            print("Mentions found: None")
+        print("Hashtags found:", hashtags_set if hashtags_set else "None")
+        print("Mentions found:", mentions_set if mentions_set else "None")
 
 
     elif choice == '9':  # Show all unique hashtags
         tagpattern = r"#[a-zA-Z0-9_]+"
         hashtags_set = set()
+
         for post in posts:
             hashtags_set.update(tag.lower() for tag in re.findall(tagpattern, post))
         for username, message in postswithUsername:
             hashtags_set.update(tag.lower() for tag in re.findall(tagpattern, message))
+        for user, details in users.items():
+            for post in details.get("posts", []):
+                hashtags_set.update(tag.lower() for tag in re.findall(tagpattern, post))
 
-        if hashtags_set:
-            print("Hashtags found:", hashtags_set)
-        else:
-            print("Hashtags found: None")
-
+        print("Hashtags found:", hashtags_set if hashtags_set else "None")
 
 
     elif choice == '10':  # Show all unique mentions
         mentionpattern = r"@[a-zA-Z0-9_]+"
         mentions_set = set()
+
         for post in posts:
             mentions_set.update(re.findall(mentionpattern, post))
         for username, message in postswithUsername:
             mentions_set.update(re.findall(mentionpattern, message))
-        
-        if hashtags_set:
-            print("Mentions found:", mentions_set)
-        else:
-            print("Mentions found: None")
+        for user, details in users.items():
+            for post in details.get("posts", []):
+                mentions_set.update(re.findall(mentionpattern, post))
+
+        print("Mentions found:", mentions_set if mentions_set else "None")
 
 
     elif choice == '11':  # Check if a hashtag exists
         tagpattern = r"#[a-zA-Z0-9_]+"
         hashtags_set = set()
+
         for post in posts:
             hashtags_set.update(re.findall(tagpattern, post))
         for username, message in postswithUsername:
             hashtags_set.update(re.findall(tagpattern, message))
+        for user, details in users.items():
+            for post in details.get("posts", []):
+                hashtags_set.update(re.findall(tagpattern, post))
 
         tagsearch = input("Enter the hashtag to search (with #):\t").strip()
         if tagsearch in hashtags_set:
@@ -217,10 +224,18 @@ while True:
     elif choice == '14':  # Add a new user
         key = input("Enter new username:\t").strip()
         password = input("Enter password for user:\t").strip()
-        posts_list = []  # start with empty posts
-        users[key] = {"password": password, "posts": posts_list} #here the key acts as search value and if found it displays the details
+        
+        # Ask if user wants to add an initial post
+        post = input("Enter a post for this user (leave empty if none):\t").strip()
+        
+        posts_list = []
+        if post:  # only add if not empty
+            posts_list.append(post)
+        
+        users[key] = {"password": password, "posts": posts_list}  # dictionary for user
         print("User added successfully!")
         print(users)
+
 
     elif choice == '15':  # Remove a user
         topop = input("Enter the username you want to remove:\t").strip()
